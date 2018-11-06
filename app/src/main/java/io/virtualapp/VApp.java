@@ -4,15 +4,19 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.multidex.MultiDexApplication;
 
+import android.util.Log;
 import com.flurry.android.FlurryAgent;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.stub.VASettings;
+import com.lody.virtual.remote.InstalledAppInfo;
 import com.yc.nonsdk.NonSdkManager;
 
 import io.virtualapp.delegate.MyAppRequestListener;
 import io.virtualapp.delegate.MyComponentDelegate;
 import io.virtualapp.delegate.MyPhoneInfoDelegate;
 import io.virtualapp.delegate.MyTaskDescriptionDelegate;
+import java.io.File;
+import java.util.List;
 import jonathanfinerty.once.Once;
 
 /**
@@ -36,6 +40,10 @@ public class VApp extends MultiDexApplication {
         NonSdkManager.getInstance().visibleAllApi();
         try {
             VirtualCore.get().startup(base);
+           /* List<InstalledAppInfo> infos = VirtualCore.get().getInstalledApps(0);
+            for (InstalledAppInfo info : infos) {
+                Log.e("attachBaseContext",info.apkPath);
+            }*/
         } catch (Throwable e) {
             e.printStackTrace();
         }

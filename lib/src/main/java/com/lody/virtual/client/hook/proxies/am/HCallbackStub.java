@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 
+import android.util.Log;
 import com.lody.virtual.client.VClientImpl;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.interfaces.IInjector;
@@ -19,6 +20,10 @@ import com.lody.virtual.helper.utils.VLog;
 import com.lody.virtual.remote.InstalledAppInfo;
 import com.lody.virtual.remote.StubActivityRecord;
 
+import dalvik.system.DexClassLoader;
+import dalvik.system.PathClassLoader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import mirror.android.app.ActivityManagerNative;
@@ -151,6 +156,22 @@ public class HCallbackStub implements Handler.Callback, IInjector {
         );
         VActivityManager.get().onActivityCreate(ComponentUtils.toComponentName(info), caller, token, info, intent, ComponentUtils.getTaskAffinity(info), taskId, info.launchMode, info.flags);
         ClassLoader appClassLoader = VClientImpl.get().getClassLoader(info.applicationInfo);
+
+
+        Class<?> ac = appClassLoader.getClass();
+        Field field = null;
+        try {
+            field = ac.getDeclaredField("pathList");
+            field.setAccessible(true);
+            Object o = field.get(appClassLoader);
+            Log.e("handleLaunchActivity2", "158**------"+o.toString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("handleLaunchActivity2", e.getMessage());
+        }
+
+
         intent.setExtrasClassLoader(appClassLoader);
         ActivityThread.ActivityClientRecord.intent.set(r, intent);
         ActivityThread.ActivityClientRecord.activityInfo.set(r, info);
@@ -218,7 +239,7 @@ public class HCallbackStub implements Handler.Callback, IInjector {
 
                         stubIntent.setExtrasClassLoader(appClassLoader);
                         ComponentName name = Reflect.on(callBacks).field("mIntent").field("mComponent").get();
-
+                        Log.e("handleLaunchActivity2",appClassLoader.toString());
                         Reflect.on(callBacks).set("mIntent", saveInstance.intent);
                         Reflect.on(callBacks).set("mInfo", saveInstance.info);
 

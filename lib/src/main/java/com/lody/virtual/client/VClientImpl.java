@@ -154,6 +154,7 @@ public final class VClientImpl extends IVClient.Stub {
 
     public ClassLoader getClassLoader(ApplicationInfo appInfo) {
         Context context = createPackageContext(appInfo.packageName);
+        Log.e("VClientImpl","getClassLoader");
         return context.getClassLoader();
     }
 
@@ -346,6 +347,7 @@ public final class VClientImpl extends IVClient.Stub {
         }
         VActivityManager.get().appDoneExecuting();
         VirtualCore.get().getComponentDelegate().afterApplicationCreate(mInitialApplication);
+        Log.e(TAG, "bindApplicationNoCheck: ");
     }
 
     private void fixWeChatRecovery(Application app) {

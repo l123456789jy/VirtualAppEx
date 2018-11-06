@@ -35,4 +35,5 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.github.lazylibrary:lazylibrary:1.0.2'
 }

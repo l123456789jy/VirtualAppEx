@@ -11,12 +11,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PersistableBundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import com.lody.virtual.helper.utils.FileUtils;
+import dalvik.system.DexClassLoader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import mirror.android.widget.Toast;
 
 /**
  * @author Lody
@@ -221,28 +234,132 @@ public class InstrumentationDelegate extends Instrumentation {
 	}
 
 	@Override
-	public void callApplicationOnCreate(Application app) {
+	public void callApplicationOnCreate(final Application app) {
+		Log.e("newActivity","callApplicationOnCreate222");
 		base.callApplicationOnCreate(app);
+		/*new Thread(){
+			@Override public void run() {
+				super.run();
+				String dexPath = getDexPath(app.getClassLoader());
+				Log.e("newActivity",dexPath);
+			}
+		}.start();*/
+
 	}
+
+	public static String getDexPath(ClassLoader classLoader){
+		try{
+			Field field = classLoader.getClass().getSuperclass().getDeclaredField("pathList");
+			field.setAccessible(true);
+			Object objPathList = field.get(classLoader);
+			Field elementsField = objPathList.getClass().getDeclaredField("dexElements");
+			elementsField.setAccessible(true);
+			Object[] elements =(Object[])elementsField.get(objPathList);
+			for(Object obj : elements){
+				//dalvik.system.DexPathList$Element
+				Log.e("newActivity" , obj.toString());
+			}
+		}catch(Exception e){
+			Log.e("newActivity",e.getMessage());
+		}
+		return "";
+	}
+
+
 
 	@Override
 	public Activity newActivity(Class<?> clazz, Context context, IBinder token, Application application, Intent intent,
 			ActivityInfo info, CharSequence title, Activity parent, String id, Object lastNonConfigurationInstance)
 			throws InstantiationException, IllegalAccessException {
+		Log.e("newActivity","233");
 		return base.newActivity(clazz, context, token, application, intent, info, title, parent, id,
 				lastNonConfigurationInstance);
 	}
 
 	@Override
-	public Activity newActivity(ClassLoader cl, String className, Intent intent)
+	public Activity newActivity(final ClassLoader cl, final String className, final Intent intent)
 			throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+		Log.e("newActivity","241");
+		new Thread(){
+			@Override public void run() {
+				super.run();
+				/*Bundle extras = intent.getExtras();
+				Iterator iter = extras.keySet().iterator();
+				while (iter.hasNext()) {
+					String key = (String) iter.next();
+					Object val = extras.get(key);
+					Log.e("newActivity","  ===========activitykey   "+key);
+					Log.e("newActivity","  ===========activityvalue   "+val);
+				}*/
+			}
+		}.start();
 		return base.newActivity(cl, className, intent);
 	}
 
 	@Override
-	public void callActivityOnCreate(Activity activity, Bundle icicle) {
+	public void callActivityOnCreate(final Activity activity, final Bundle icicle) {
+		Log.e("newActivity","callActivityOnCreate3333");
 		base.callActivityOnCreate(activity, icicle);
+		new Thread(){
+			@Override public void run() {
+				super.run();
+			/*	Set<String> strings = icicle.keySet();
+				for (String key : strings) {
+					Object value = icicle.get(key);
+					Log.e("newActivity","key==== "+key+"   value===== "+value);
+				}*/
+				//String dexPath = getDexPath(activity.getClassLoader());
+
+				// 先获取到当前的ActivityThread对象
+				Class<?> activityThreadClass = null;
+				try {
+
+					activityThreadClass = Class.forName("android.app.ActivityThread");
+					Method currentActivityThreadMethod = activityThreadClass.getDeclaredMethod("currentActivityThread");
+					currentActivityThreadMethod.setAccessible(true);
+					Object currentActivityThread = currentActivityThreadMethod.invoke(null);
+
+					// 获取到 mPackages 这个静态成员变量, 这里缓存了dex包的信息
+					Field mPackagesField = activityThreadClass.getDeclaredField("mPackages");
+					mPackagesField.setAccessible(true);
+					Map mPackages = (Map) mPackagesField.get(currentActivityThread);
+					WeakReference wr = (WeakReference) mPackages.get("cn.com.bmac.nfc");
+					if (null!=wr){
+						// android LoadedApk 对象
+						Object o = wr.get();
+						Method mDataDirFile = o.getClass().getDeclaredMethod("getDataDirFile");
+						Field mApplicationInfo = o.getClass().getDeclaredField("mApplicationInfo");
+						mDataDirFile.setAccessible(true);
+						mApplicationInfo.setAccessible(true);
+						ApplicationInfo applicationInfo= (ApplicationInfo) mApplicationInfo.get(o);
+						//这个得到是 data下当前应用沙盒的信息文件，可以拷贝出来
+						File invoke = (File) mDataDirFile.invoke(o);
+						//com.github.lazylibrary.util.FileUtils.writeFile(invoke,new FileInputStream(invoke),true);
+
+						Intent intent = activity.getIntent();
+						Bundle extras = intent.getExtras();
+						Iterator iter = extras.keySet().iterator();
+						while (iter.hasNext()) {
+							String key = (String) iter.next();
+							Object val = extras.get(key);
+							Log.e("newActivity","  ===========activitykey   "+key);
+							Log.e("newActivity","  ===========activityvalue   "+val);
+						}
+
+					}
+
+					Log.e("newActivity","  ===========activity   "+mPackages.toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e("newActivity",e.getMessage());
+				}
+
+				Log.e("newActivity","  ===========activity   "+activity.getClass().getName());
+			}
+		}.start();
 	}
+
+
 
 	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	@Override

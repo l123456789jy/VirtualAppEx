@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.lody.virtual.helper.utils.Reflect;
@@ -71,6 +72,8 @@ import static com.lody.virtual.os.VEnvironment.getPackageResourcePath;
         if (bundle != null) {
             bundle.putParcelable(EXTRA_BUILDER_APPLICATION_INFO, proxyApplicationInfo);
         }
+
+        Log.e(TAG, appContext.getClassLoader().toString());
         return true;
     }
 

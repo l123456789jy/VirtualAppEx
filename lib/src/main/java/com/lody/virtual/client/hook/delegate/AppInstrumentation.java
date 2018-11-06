@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 
+import android.util.Log;
 import com.lody.virtual.client.VClientImpl;
 import com.lody.virtual.client.core.VirtualCore;
 import com.lody.virtual.client.fixer.ActivityFixer;
@@ -69,6 +70,7 @@ public final class AppInstrumentation extends InstrumentationDelegate implements
 
     @Override
     public void callActivityOnCreate(Activity activity, Bundle icicle) {
+        Log.e(TAG, "callActivityOnCreate: ");
         if (icicle != null) {
             BundleCompat.clearParcelledData(icicle);
         }
